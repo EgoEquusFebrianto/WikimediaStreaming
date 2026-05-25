@@ -29,12 +29,12 @@
     </Appenders>
 
     <Loggers>
-        <Logger name="org.apache.kafka" level="info" additivity="false">
-            <AppenderRef ref="KafkaSystem"/>
-        </Logger>
+<!--        <Logger name="org.apache.kafka" level="info" additivity="false">-->
+<!--            <AppenderRef ref="KafkaSystem"/>-->
+<!--        </Logger>-->
 
 <!--        <Logger name="org.apache.kafka" level="info" additivity="false"/>-->
-        <Logger name="org.apache.zookeeper" level="error" additivity="false"/>
+<!--        <Logger name="org.apache.zookeeper" level="error" additivity="false"/>-->
 
 <!--         Logger Utama -->
         <Root level="info">
