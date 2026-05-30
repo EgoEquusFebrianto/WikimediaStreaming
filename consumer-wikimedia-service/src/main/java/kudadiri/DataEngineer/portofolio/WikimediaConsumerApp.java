@@ -67,11 +67,11 @@ public class WikimediaConsumerApp {
         return restHighLevelClient;
     }
 
-    private static KafkaConsumer<String, String> createConsumer(String group, int identifier) {
+    private static KafkaConsumer<String, String> createConsumer(String servers,String group, String identifier) {
         Properties props = new Properties();
         String consumerId = group + "-" + identifier;
 
-        props.put("bootstrap.servers", "172.25.5.7:9092");
+        props.put("bootstrap.servers", servers);
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", StringDeserializer.class.getName());
         props.put("auto.offset.reset", "latest");
@@ -91,15 +91,27 @@ public class WikimediaConsumerApp {
     }
 
     public static void main(String[] args) {
+        if (args.length < 3) {
+            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <consumer-group-id> <consumer-id>");
+        } else {
+            System.out.println("Consumer Started..");
+        }
+
+        String servers = args[0];
+        String group = args[1];
+        String identifier = args[2];
+
+//        String servers = "172.25.5.7:9092";
+//        String group = "consumer-openSearch-group";
+//        String identifier = "1";
+
         final Logger log = LoggerFactory.getLogger(WikimediaConsumerApp.class.getSimpleName());
-        String group = "consumer-openSearch-group";
-        int identifier = 1;
 
         // create OpenSearch Client
         RestHighLevelClient openSearchClient = createOpenSearchClient();
 
         // create Kafka consumer
-        KafkaConsumer<String, String> consumer = createConsumer(group, identifier);
+        KafkaConsumer<String, String> consumer = createConsumer(servers, group, identifier);
 
         final Thread mainThread = Thread.currentThread();
 
