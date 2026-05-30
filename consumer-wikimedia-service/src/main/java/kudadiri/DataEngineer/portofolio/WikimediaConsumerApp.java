@@ -1,5 +1,7 @@
 package kudadiri.DataEngineer.portofolio;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -7,8 +9,13 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.CooperativeStickyAssignor;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.opensearch.action.bulk.BulkItemResponse;
+import org.opensearch.action.bulk.BulkRequest;
+import org.opensearch.action.bulk.BulkResponse;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.action.index.IndexResponse;
 import org.opensearch.client.RequestOptions;
@@ -28,6 +35,8 @@ import java.util.Collections;
 import java.util.Properties;
 
 public class WikimediaConsumerApp {
+    private static final ObjectMapper mapper = new ObjectMapper();
+
     private static RestHighLevelClient createOpenSearchClient() {
         String opensearchConnection = "https://1c7fdb58c2:77a29dd0ee439c5ec3a9@serene-camphor-1pk1bptz.ap-southeast-2.bonsaisearch.net";
 
@@ -58,26 +67,54 @@ public class WikimediaConsumerApp {
         return restHighLevelClient;
     }
 
-    private static KafkaConsumer<String, String> createConsumer() {
+    private static KafkaConsumer<String, String> createConsumer(String group, int identifier) {
         Properties props = new Properties();
+        String consumerId = group + "-" + identifier;
 
         props.put("bootstrap.servers", "172.25.5.7:9092");
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", StringDeserializer.class.getName());
         props.put("auto.offset.reset", "latest");
-        props.put("group.id", "consumer-openSearch-group");
+        props.put("group.id", group);
+        props.put("group.instance.id", consumerId);
+        props.put("partition.assignment.strategy", CooperativeStickyAssignor.class.getName());
+        props.put("enable.auto.commit", "false");
 
         return new KafkaConsumer<>(props);
     }
 
+    private static String extractId(String json) throws JsonProcessingException {
+        return mapper.readTree(json)
+                .get("meta")
+                .get("id")
+                .asText();
+    }
+
     public static void main(String[] args) {
         final Logger log = LoggerFactory.getLogger(WikimediaConsumerApp.class.getSimpleName());
+        String group = "consumer-openSearch-group";
+        int identifier = 1;
 
         // create OpenSearch Client
         RestHighLevelClient openSearchClient = createOpenSearchClient();
 
         // create Kafka consumer
-        KafkaConsumer<String, String> consumer = createConsumer();
+        KafkaConsumer<String, String> consumer = createConsumer(group, identifier);
+
+        final Thread mainThread = Thread.currentThread();
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                log.info("Detect a shutdown, calling consumer.wakeup().");
+                consumer.wakeup();
+
+                try {
+                    mainThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
         try(openSearchClient; consumer) {
             boolean indexExists = openSearchClient.indices().exists(new GetIndexRequest("wikimedia"), RequestOptions.DEFAULT);
@@ -98,20 +135,71 @@ public class WikimediaConsumerApp {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(3000));
 
                 int recordCount = records.count();
-                log.info("Receive {} record(s)", recordCount);
+                System.out.printf("Receive %s record(s)\n", recordCount);
+
+                BulkRequest bulkRequest = new BulkRequest();
 
                 for (ConsumerRecord<String, String> record : records) {
+                    String id = extractId(record.value());
+
                     IndexRequest indexRequest = new IndexRequest("wikimedia")
-                            .source(record.value(), XContentType.JSON);
+                            .source(record.value(), XContentType.JSON)
+                            .id(id);
 
-                    IndexResponse response = openSearchClient.index(indexRequest, RequestOptions.DEFAULT);
+//                    IndexResponse response = openSearchClient.index(indexRequest, RequestOptions.DEFAULT);
+//                    log.info(response.getId());
 
-                    log.info(response.getId());
+                    bulkRequest.add(indexRequest);
+                }
+
+                if (bulkRequest.numberOfActions() > 0) {
+                    BulkResponse bulkResponse = openSearchClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+                    if (bulkResponse.hasFailures()) {
+                        log.error("Bulk indexing contains failures.");
+
+                        for (BulkItemResponse item : bulkResponse.getItems()) {
+                            if (item.isFailed()) {
+                                log.error(
+                                        "Failed to index document id={}, reason={}",
+                                        item.getId(),
+                                        item.getFailureMessage()
+                                );
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    System.out.println("inserted " + bulkResponse.getItems().length + " record(s).");
+
+                    // Simulate slow downstream system
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    consumer.commitSync();
+                    System.out.println("Offsets have been commited!");
+
+//                    consumer.commitAsync((map, e) -> {
+//                        if (e != null) {
+//                            log.error("Failed to commit offset {}", map, e);
+//                        } else {
+//                            System.out.println("Offsets have been commited!");
+//                        }
+//                    });
                 }
             }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch(WakeupException e) {
+            log.info("Consumer is starting to shutdown.");
+        }  catch(Exception e) {
+            log.error("Unexpected error in consumer", e);
+        } finally {
+//            consumer.close();
+//            openSearchClient.close();
+            log.info("The Consumer is now gracefully shutdown.");
         }
     }
 }

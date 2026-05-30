@@ -36,3 +36,5 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+consumer-wikimedia-service/src/main/java/kudadiri/DataEngineer/portofolio/TestYourMight.java
