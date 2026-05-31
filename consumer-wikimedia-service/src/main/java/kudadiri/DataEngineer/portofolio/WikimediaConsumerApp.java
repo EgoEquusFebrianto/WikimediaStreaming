@@ -91,19 +91,19 @@ public class WikimediaConsumerApp {
     }
 
     public static void main(String[] args) {
-        if (args.length < 3) {
-            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <consumer-group-id> <consumer-id>");
-        } else {
-            System.out.println("Consumer Started..");
-        }
+//        if (args.length < 3) {
+//            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <consumer-group-id> <consumer-id>");
+//        } else {
+//            System.out.println("Consumer Started..");
+//        }
+//
+//        String servers = args[0];
+//        String group = args[1];
+//        String identifier = args[2];
 
-        String servers = args[0];
-        String group = args[1];
-        String identifier = args[2];
-
-//        String servers = "172.25.5.7:9092";
-//        String group = "consumer-openSearch-group";
-//        String identifier = "1";
+        String servers = "172.25.5.7:9092";
+        String group = "consumer-openSearch-group";
+        String identifier = "1";
 
         final Logger log = LoggerFactory.getLogger(WikimediaConsumerApp.class.getSimpleName());
 
@@ -143,13 +143,11 @@ public class WikimediaConsumerApp {
             consumer.subscribe(Collections.singletonList("wikimedia.recentChange"));
 
             while (true) {
-
+                BulkRequest bulkRequest = new BulkRequest();
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(3000));
 
                 int recordCount = records.count();
                 System.out.printf("Receive %s record(s)\n", recordCount);
-
-                BulkRequest bulkRequest = new BulkRequest();
 
                 for (ConsumerRecord<String, String> record : records) {
                     String id = extractId(record.value());
