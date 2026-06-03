@@ -14,12 +14,25 @@ import java.util.concurrent.TimeUnit;
 
 public class WikimediaProducerApp {
     private static final Logger log = LoggerFactory.getLogger(WikimediaProducerApp.class);
+    private static final Logger metricLogs = LoggerFactory.getLogger("metricsLogger");
 
     public static void main(String[] args) throws InterruptedException {
-        String streamUrl = "https://stream.wikimedia.org/v2/stream/recentchange";
-        String topic = "wikimedia.recentChange";
+        if (args.length < 3) {
+            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <topic> <wikimedia-stream-url>");
+        } else {
+            System.out.println("Consumer Started..");
+        }
+
+        String servers = args[0];
+        String topic = args[1];
+        String streamUrl = args[2];
+
+//        String servers = "172.25.5.7:9092";
+//        String topic = "wikimedia.recentChange";
+//        String streamUrl = "https://stream.wikimedia.org/v2/stream/recentchange";
+
         Properties configs = new Properties();
-        configs.put("bootstrap.servers", "172.25.5.7:9092");
+        configs.put("bootstrap.servers", servers);
         configs.put("key.serializer", StringSerializer.class.getName());
         configs.put("value.serializer", StringSerializer.class.getName());
 
@@ -37,7 +50,8 @@ public class WikimediaProducerApp {
                 .header("Cache-Control", "no-cache")
                 .build();
 
-        WikimediaListener listener = new WikimediaListener(producer, topic, log);
+        Logger[] sysLog = {log, metricLogs};
+        WikimediaListener listener = new WikimediaListener(producer, topic, sysLog);
         EventSource.Factory factory = EventSources.createFactory(client);
         EventSource eventSource = factory.newEventSource(request, listener);
 

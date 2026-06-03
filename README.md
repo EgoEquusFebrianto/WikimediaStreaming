@@ -33,9 +33,10 @@ Diagram menunjukkan alur data mulai dari Wikimedia Event Stream → Kafka Produc
 # Teknologi yang Digunakan
 
 | Teknologi         | Fungsi                             |
-| ----------------- | ---------------------------------- |
+|-------------------|------------------------------------|
 | Java              | Bahasa pemrograman utama           |
 | Apache Kafka      | Distributed Message Broker         |
+| SLF4j             | Logging System                     |
 | OkHttp3 SSE       | Mengonsumsi Wikimedia Event Stream |
 | OpenSearch        | Penyimpanan dan pencarian data     |
 | Bonsai OpenSearch | Managed OpenSearch Service         |
@@ -183,17 +184,13 @@ Fungsi:
 wikimedia-streaming/
 │
 ├── assets/
-│   ├── system-architecture.png
-│   ├── data-flow.png
-│   ├── kafka-producer-flow.png
-│   ├── kafka-consumer-flow.png
-│   ├── opensearch-integration.png
-│   ├── kafka-topic-message.png
-│   ├── opensearch-dashboard.png
-│   └── producer-consumer-logs.png
 │
 ├── consumer-wikimedia-service/
 │   └── WikimediaConsumerApp.java
+│
+├── logs
+│   ├── consumer
+│   └── producer
 │
 ├── producer-wikimedia-service/
 │   ├── WikimediaListener.java
@@ -206,6 +203,7 @@ Penjelasan Struktur Project
 - `assets`: Berisi gambar, diagram arsitektur, screenshot, dan dokumentasi visual yang digunakan dalam README.
 - `consumer-wikimedia-service`: Modul Kafka Consumer yang bertugas membaca event dari Kafka Topic dan melakukan indexing data ke OpenSearch.
   - `WikimediaConsumerApp.java`: Entry point aplikasi consumer yang menginisialisasi Kafka Consumer dan proses indexing ke OpenSearch.
+- `logs`: Berisi file pesan atau log yang dihasilkan oleh Producer dan Consumer.
 - `producer-wikimedia-service`: Modul Kafka Producer yang bertugas mengonsumsi data dari Wikimedia Event Stream dan mengirimkannya ke Kafka Topic.
   - `WikimediaListener.java`: Implementasi SSE listener menggunakan OkHttp3 untuk menerima event perubahan artikel Wikimedia secara real-time dan meneruskannya ke Kafka Producer.
   - `WikimediaProducerApp.java`: Entry point aplikasi producer yang menginisialisasi Kafka Producer, membangun koneksi ke Wikimedia Event Stream, dan menjalankan proses streaming data menuju Kafka.
@@ -214,17 +212,19 @@ Penjelasan Struktur Project
 
 # Implementasi
 
+Pada Bagian ini menampilkan hasil-hasil dari pada pengembangan program yang telah berhasil dilakukan.
+
 ## Kafka Producer
 
 ![Producer Log](assets/producer-log.png)
 Gambar 4. Producer berhasil menerima event Wikimedia dan mengirimkannya ke Kafka.
 
-Fitur utama:
+Implementasi Kafka Producer berhasil membangun koneksi ke Wikimedia Event Stream menggunakan mekanisme Server-Sent Events (SSE) dan menerima data perubahan artikel secara real-time. Setiap event yang diterima kemudian dipublikasikan ke Kafka Topic untuk diproses oleh komponen downstream.
 
-- SSE Connection
-- Event Streaming
-- Kafka Producer API
-- JSON Message Delivery
+Berdasarkan log pada gambar di atas, dapat disimpulkan bahwa producer berhasil:
+- Membangun koneksi ke Wikimedia Event Stream.
+- Menerima event perubahan artikel secara kontinu.
+- Mengirim payload JSON ke Kafka Topic.
 
 ---
 
@@ -233,31 +233,62 @@ Fitur utama:
 ![Consumer Log](assets/consumer-log.png)
 Gambar 5. Consumer berhasil membaca event dari Kafka dan memproses data.
 
-Fitur utama:
+Implementasi Kafka Consumer bertugas mengonsumsi event yang dipublikasikan oleh producer ke Kafka Topic, melakukan pemrosesan data, serta menyimpan dokumen ke OpenSearch menggunakan mekanisme bulk indexing.
 
-- Kafka Consumer API
-- JSON Processing
-- OpenSearch Indexing
+Berdasarkan log pada gambar di atas, consumer berhasil:
+
+* Membaca data dari Kafka Topic menggunakan mekanisme polling.
+* Memproses event secara batch.
+* Melakukan bulk indexing ke OpenSearch.
+* Menyelesaikan seluruh siklus pemrosesan data dengan status berhasil.
+
+Log juga mencatat informasi operasional seperti jumlah record yang diproses dan waktu yang dibutuhkan untuk setiap tahap pemrosesan.
+
+### Ringkasan Implementasi Consumer
+
+| Aktivitas                 | Status   |
+| ------------------------- | -------- |
+| Kafka Polling             | Berhasil |
+| Event Processing          | Berhasil |
+| OpenSearch Bulk Indexing  | Berhasil |
+| End-to-End Pipeline Cycle | Berhasil |
+
+### Contoh Hasil Eksekusi
+
+| Batch Size  | OpenSearch Duration | Total Pipeline Duration | Status  |
+| ----------- | ------------------- | ----------------------- | ------- |
+| 3 Records   | 634 ms              | 2981 ms                 | SUCCESS |
+| 27 Records  | 1065 ms             | 2240 ms                 | SUCCESS |
+| 72 Records  | 1695 ms             | 3069 ms                 | SUCCESS |
+| 106 Records | 2498 ms             | 3534 ms                 | SUCCESS |
+
+Berdasarkan hasil tersebut, consumer berhasil memproses beberapa batch data dengan ukuran yang berbeda dan seluruh proses indexing ke OpenSearch berhasil diselesaikan tanpa kegagalan.
+
 
 ## Data pada OpenSearch
 
-![OpenSearch Dashboard](assets/opensearch-dashboard.png)
+![OpenSearch Data](assets/opensearch-data.png)
 Gambar 7. Data hasil indexing yang tersimpan pada OpenSearch.
 
+OpenSearch digunakan sebagai media penyimpanan dan pencarian untuk event perubahan yang diperoleh dari Wikimedia Event Stream. Setelah event diterima dan diproses oleh Kafka Consumer, setiap event diindeks ke dalam index `wikimedia` menggunakan mekanisme bulk indexing.
+
+Berdasarkan hasil query pada gambar di atas, index `wikimedia` berhasil menyimpan sebanyak 3.982 event perubahan yang berasal dari berbagai proyek Wikimedia. Event tersebut mencakup informasi seperti jenis perubahan, judul halaman, pengguna yang melakukan perubahan, waktu kejadian, serta metadata lainnya yang dipublikasikan oleh Wikimedia.
+
+Data yang telah diindeks dapat dicari kembali menggunakan OpenSearch Query API sehingga memungkinkan proses observasi, pencarian, dan analisis aktivitas Wikimedia secara near real-time.
+
+### Ringkasan Implementasi OpenSearch
+
+| Aktivitas                                    | Status   |
+| -------------------------------------------- | -------- |
+| Pembuatan Index `wikimedia`                  | Berhasil |
+| Penerimaan Event dari Kafka Consumer         | Berhasil |
+| Bulk Indexing ke OpenSearch                  | Berhasil |
+| Penyimpanan Event Perubahan Wikimedia        | Berhasil |
+| Pencarian Data Menggunakan Query API         | Berhasil |
+| Pengambilan Kembali Dokumen (Data Retrieval) | Berhasil |
+
 ---
-# End-to-End Pipeline Validation
 
-Pipeline berhasil memproses data dari Wikimedia Event Stream hingga OpenSearch.
-
-Tahapan yang berhasil divalidasi:
-- Producer berhasil menerima event Wikimedia.
-- Producer berhasil mengirim event ke Kafka Topic.
-- Consumer berhasil membaca event dari Kafka.
-- Consumer berhasil melakukan parsing JSON.
-- Consumer berhasil melakukan indexing ke OpenSearch.
-- Dokumen berhasil dicari kembali melalui OpenSearch.
-
----
 # Hasil Pengujian
 
 ![Performances Pipeline](assets/end-to-end-test.png)
@@ -270,7 +301,9 @@ Tahapan yang berhasil divalidasi:
 ## Menjalankan Kafka Server (Dengan Kafka Raft/KRAFT)
 
 ```bash
-kafka-storage.sh format -t $(kafka-storage.sh random-uuid) -c your-kafka-home/config/kraft/server.properties
+kafka-storage.sh \
+  format -t $(kafka-storage.sh random-uuid) \
+  -c your-kafka-home/config/kraft/server.properties
 
 kafka-server-start.sh your-kafka-home/config/kraft/server.properties
 ```
@@ -281,7 +314,6 @@ kafka-server-start.sh your-kafka-home/config/kraft/server.properties
 kafka-topics.sh --create \
   --topic wikimedia.recentChange \
   --partition 2 \
-  --replication-factor 2 \
   --bootstrap-server localhost:9092
 ```
 

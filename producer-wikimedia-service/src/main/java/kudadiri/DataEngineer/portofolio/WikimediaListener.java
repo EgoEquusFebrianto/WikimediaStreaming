@@ -14,9 +14,9 @@ public class WikimediaListener extends EventSourceListener {
 
     private KafkaProducer<String, String> producer;
     private String topic;
-    private Logger log;
+    private Logger[] log;
 
-    public WikimediaListener(KafkaProducer<String, String> producer, String topic, Logger log) {
+    public WikimediaListener(KafkaProducer<String, String> producer, String topic, Logger[] log) {
         this.producer = producer;
         this.topic = topic;
         this.log = log;
@@ -24,7 +24,7 @@ public class WikimediaListener extends EventSourceListener {
 
     @Override
     public void onClosed(@NotNull EventSource eventSource) {
-        log.info("Koneksi Stream Ditutup pukul: {}...", Instant.now());
+        log[0].info("Koneksi Stream Ditutup pukul: {}...", Instant.now());
     }
 
     @Override
@@ -32,9 +32,9 @@ public class WikimediaListener extends EventSourceListener {
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, id, data);
         producer.send(record, (recordMetadata, e) -> {
             if (e != null) {
-                log.error("Terjadi Kesalahan Saat mengirim data ke topic: {} partisi: {}", recordMetadata.topic(), recordMetadata.partition());
+                log[0].error("Terjadi Kesalahan Saat mengirim data ke topic: {} partisi: {}", recordMetadata.topic(), recordMetadata.partition());
             } else {
-                System.out.printf("Data %s, Berhasil Dikirim ke partisi %s\n", id, recordMetadata.partition());
+                log[1].info("Data {}, Berhasil Dikirim ke partisi {}}", id, recordMetadata.partition());
             }
         });
     }
@@ -42,17 +42,17 @@ public class WikimediaListener extends EventSourceListener {
     @Override
     public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
         if (t != null) {
-            log.error("Terjadi Error pada Stream: {}", t.getMessage());
+            log[0].error("Terjadi Error pada Stream: {}", t.getMessage());
         } else {
             System.out.println("Terjadi Error pada Stream: unknown cause (throwable is null)");
             if (response != null) {
-                System.out.println("Response code: " + response.code());
+                log[0].error("Response code: {}", response.code());
             }
         }
     }
 
     @Override
     public void onOpen(@NotNull EventSource eventSource, @NotNull Response response) {
-        log.info("Koneksi Stream Terbuka pukul: {}...", Instant.now());
+        log[0].info("Koneksi Stream Terbuka pukul: {}...", Instant.now());
     }
 }

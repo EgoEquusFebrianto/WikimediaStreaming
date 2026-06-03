@@ -7,10 +7,21 @@
         </Console>
 
         <!-- Rolling File Appender -->
-        <RollingFile name="RollingFile" fileName="logs/app.log"
+        <RollingFile name="RollingFile" fileName="logs/consumer/consumer-event-log.log"
                      filePattern="logs/app-%d{yyyy-MM-dd}.log.gz">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="1"/>
+        </RollingFile>
+
+        <RollingFile name="MetricsFile" fileName="logs/consumer/consumer-metrics-logs.log"
+                     filePattern="logs/app-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout>
+                <Pattern>%msg%n</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10MB"/>
@@ -36,10 +47,14 @@
 <!--        <Logger name="org.apache.kafka" level="info" additivity="false"/>-->
 <!--        <Logger name="org.apache.zookeeper" level="error" additivity="false"/>-->
 
+        <Logger name="metricsLogs" level="info" additivity="false">
+            <AppenderRef ref="MetricsFile" />
+        </Logger>
+
 <!--         Logger Utama -->
         <Root level="info">
             <AppenderRef ref="Console"/>
-<!--            <AppenderRef ref="RollingFile"/>-->
+            <AppenderRef ref="RollingFile"/>
 <!--            <AppenderRef ref="KafkaAppender"/>-->
         </Root>
     </Loggers>

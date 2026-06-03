@@ -1,0 +1,46 @@
+EVENT:KafkaPoll | Records:3 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:3 | DurationMs:634 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:3 | DurationMs:2981 | Status:SUCCESS
+EVENT:KafkaPoll | Records:27 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:27 | DurationMs:1065 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:27 | DurationMs:2240 | Status:SUCCESS
+EVENT:KafkaPoll | Records:72 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:72 | DurationMs:1695 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:72 | DurationMs:3069 | Status:SUCCESS
+EVENT:KafkaPoll | Records:106 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:106 | DurationMs:2498 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:106 | DurationMs:3534 | Status:SUCCESS
+EVENT:KafkaPoll | Records:152 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:152 | DurationMs:3663 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:152 | DurationMs:4728 | Status:SUCCESS
+EVENT:KafkaPoll | Records:151 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:151 | DurationMs:3376 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:151 | DurationMs:5225 | Status:SUCCESS
+EVENT:KafkaPoll | Records:242 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:242 | DurationMs:5060 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:242 | DurationMs:6091 | Status:SUCCESS
+EVENT:KafkaPoll | Records:231 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:231 | DurationMs:4462 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:231 | DurationMs:5485 | Status:SUCCESS
+EVENT:KafkaPoll | Records:312 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:312 | DurationMs:5761 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:312 | DurationMs:6788 | Status:SUCCESS
+EVENT:KafkaPoll | Records:328 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:328 | DurationMs:4417 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:328 | DurationMs:5447 | Status:SUCCESS
+EVENT:KafkaPoll | Records:284 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:284 | DurationMs:4398 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:284 | DurationMs:5431 | Status:SUCCESS
+EVENT:KafkaPoll | Records:187 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:187 | DurationMs:3593 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:187 | DurationMs:4616 | Status:SUCCESS
+EVENT:KafkaPoll | Records:180 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:180 | DurationMs:3107 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:180 | DurationMs:4140 | Status:SUCCESS
+EVENT:KafkaPoll | Records:170 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:170 | DurationMs:2973 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:170 | DurationMs:4037 | Status:SUCCESS
+EVENT:KafkaPoll | Records:92 | Status:SUCCESS
+EVENT:OpenSearchBulk | Records:92 | DurationMs:1572 | Status:SUCCESS
+EVENT:TotalPipelineCycle | Records:92 | DurationMs:2600 | Status:SUCCESS
+Detect a shutdown, calling consumer.wakeup().

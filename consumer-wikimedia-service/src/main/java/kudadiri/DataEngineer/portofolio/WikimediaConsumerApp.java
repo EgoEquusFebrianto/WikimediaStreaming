@@ -91,21 +91,22 @@ public class WikimediaConsumerApp {
     }
 
     public static void main(String[] args) {
-//        if (args.length < 3) {
-//            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <consumer-group-id> <consumer-id>");
-//        } else {
-//            System.out.println("Consumer Started..");
-//        }
-//
-//        String servers = args[0];
-//        String group = args[1];
-//        String identifier = args[2];
+        if (args.length < 3) {
+            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <consumer-group-id> <consumer-id>");
+        } else {
+            System.out.println("Consumer Started..");
+        }
 
-        String servers = "172.25.5.7:9092";
-        String group = "consumer-openSearch-group";
-        String identifier = "1";
+        String servers = args[0];
+        String group = args[1];
+        String identifier = args[2];
 
-        final Logger log = LoggerFactory.getLogger(WikimediaConsumerApp.class.getSimpleName());
+//        String servers = "172.25.5.7:9092";
+//        String group = "consumer-openSearch-group";
+//        String identifier = "1";
+
+        final Logger sysLog = LoggerFactory.getLogger(WikimediaConsumerApp.class.getSimpleName());
+        final Logger metricsLog = LoggerFactory.getLogger("metricsLogs");
 
         // create OpenSearch Client
         RestHighLevelClient openSearchClient = createOpenSearchClient();
@@ -117,7 +118,7 @@ public class WikimediaConsumerApp {
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                log.info("Detect a shutdown, calling consumer.wakeup().");
+                sysLog.info("Detect a shutdown, calling consumer.wakeup().");
                 consumer.wakeup();
 
                 try {
@@ -135,19 +136,27 @@ public class WikimediaConsumerApp {
                 CreateIndexRequest createIndexRequest = new CreateIndexRequest("wikimedia");
                 openSearchClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
 
-                log.info("The Wikimedia Index has been created!");
+                sysLog.info("The Wikimedia Index has been created!");
             } else {
-                log.info("The Wikimedia Index already exists.");
+                sysLog.info("The Wikimedia Index already exists.");
             }
 
             consumer.subscribe(Collections.singletonList("wikimedia.recentChange"));
 
             while (true) {
+                // [METRICS 3] Mulai hitung total waktu satu siklus loop
+                long startLoopTime = System.currentTimeMillis();
+
                 BulkRequest bulkRequest = new BulkRequest();
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(3000));
 
                 int recordCount = records.count();
-                System.out.printf("Receive %s record(s)\n", recordCount);
+//                System.out.printf("Receive %s record(s)\n", recordCount);
+
+                // [METRICS 1] Catat jumlah data yang didapat dari Kafka poll
+                if (recordCount > 0) {
+                    metricsLog.info("EVENT:KafkaPoll | Records:{} | Status:SUCCESS", recordCount);
+                }
 
                 for (ConsumerRecord<String, String> record : records) {
                     String id = extractId(record.value());
@@ -157,20 +166,28 @@ public class WikimediaConsumerApp {
                             .id(id);
 
 //                    IndexResponse response = openSearchClient.index(indexRequest, RequestOptions.DEFAULT);
-//                    log.info(response.getId());
+//                    sysLog.info(response.getId());
 
                     bulkRequest.add(indexRequest);
                 }
 
                 if (bulkRequest.numberOfActions() > 0) {
+                    // [METRICS 2] Mulai hitung waktu proses ke OpenSearch
+                    long startBulkTime = System.currentTimeMillis();
+
                     BulkResponse bulkResponse = openSearchClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                    long bulkDuration = System.currentTimeMillis() - startBulkTime;
 
                     if (bulkResponse.hasFailures()) {
-                        log.error("Bulk indexing contains failures.");
+                        sysLog.error("Bulk indexing contains failures.");
+
+                        // [METRICS 2b] Catat jika bulk indexing gagal/error performanya
+                        metricsLog.info("EVENT:OpenSearchBulk | Records:{} | DurationMs:{} | Status:FAILED",
+                                bulkRequest.numberOfActions(), bulkDuration);
 
                         for (BulkItemResponse item : bulkResponse.getItems()) {
                             if (item.isFailed()) {
-                                log.error(
+                                sysLog.error(
                                         "Failed to index document id={}, reason={}",
                                         item.getId(),
                                         item.getFailureMessage()
@@ -181,7 +198,11 @@ public class WikimediaConsumerApp {
                         continue;
                     }
 
-                    System.out.println("inserted " + bulkResponse.getItems().length + " record(s).");
+                    // [METRICS 2a] Catat jika bulk indexing sukses beserta durasinya
+                    metricsLog.info("EVENT:OpenSearchBulk | Records:{} | DurationMs:{} | Status:SUCCESS",
+                            bulkResponse.getItems().length, bulkDuration);
+
+//                    System.out.println("inserted " + bulkResponse.getItems().length + " record(s).");
 
                     // Simulate slow downstream system
                     try {
@@ -193,6 +214,11 @@ public class WikimediaConsumerApp {
                     consumer.commitSync();
                     System.out.println("Offsets have been commited!");
 
+                    // [METRICS 3] Catat total waktu siklus pemrosesan sampai commit selesai
+                    long totalLoopDuration = System.currentTimeMillis() - startLoopTime;
+                    metricsLog.info("EVENT:TotalPipelineCycle | Records:{} | DurationMs:{} | Status:SUCCESS",
+                            recordCount, totalLoopDuration);
+
 //                    consumer.commitAsync((map, e) -> {
 //                        if (e != null) {
 //                            log.error("Failed to commit offset {}", map, e);
@@ -203,13 +229,13 @@ public class WikimediaConsumerApp {
                 }
             }
         } catch(WakeupException e) {
-            log.info("Consumer is starting to shutdown.");
+            sysLog.info("Consumer is starting to shutdown.");
         }  catch(Exception e) {
-            log.error("Unexpected error in consumer", e);
+            sysLog.error("Unexpected error in consumer", e);
         } finally {
 //            consumer.close();
 //            openSearchClient.close();
-            log.info("The Consumer is now gracefully shutdown.");
+            sysLog.info("The Consumer is now gracefully shutdown.");
         }
     }
 }
