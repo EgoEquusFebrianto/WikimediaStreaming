@@ -239,15 +239,6 @@ Fitur utama:
 - JSON Processing
 - OpenSearch Indexing
 
----
-
-## Contoh Data Kafka
-
-![Kafka Topic Message](assets/kafka-topic-message.png)
-Gambar 6. Contoh pesan yang diterima Kafka Topic dari Wikimedia Stream.
-
----
-
 ## Data pada OpenSearch
 
 ![OpenSearch Dashboard](assets/opensearch-dashboard.png)
@@ -269,18 +260,29 @@ Tahapan yang berhasil divalidasi:
 ---
 # Hasil Pengujian
 
-![End-to-End Test](assets/end-to-end-test.png)
-Gambar 8. Pengujian end-to-end pipeline berhasil memindahkan data dari Wikimedia Stream hingga OpenSearch.
+![Performances Pipeline](assets/end-to-end-test.png)
 
 
 ---
 
 # Cara Menjalankan
 
-## Menjalankan Kafka
+## Menjalankan Kafka Server (Dengan Kafka Raft/KRAFT)
 
+```bash
+kafka-storage.sh format -t $(kafka-storage.sh random-uuid) -c your-kafka-home/config/kraft/server.properties
+
+kafka-server-start.sh your-kafka-home/config/kraft/server.properties
 ```
-docker compose up -d
+
+## Membuat Topic Kafka (Contoh)
+
+```bash
+kafka-topics.sh --create \
+  --topic wikimedia.recentChange \
+  --partition 2 \
+  --replication-factor 2 \
+  --bootstrap-server localhost:9092
 ```
 
 ## Menjalankan Producer
