@@ -27,7 +27,7 @@ public class WikimediaProducerApp {
         String topic = args[1];
         String streamUrl = args[2];
 
-//        String servers = "172.25.5.7:9092";
+//        String servers = "<IP_KAFKA>:<Port_KAFKA>";
 //        String topic = "wikimedia.recentChange";
 //        String streamUrl = "https://stream.wikimedia.org/v2/stream/recentchange";
 

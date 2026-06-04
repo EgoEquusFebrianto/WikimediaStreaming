@@ -38,7 +38,7 @@ public class WikimediaConsumerApp {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private static RestHighLevelClient createOpenSearchClient() {
-        String opensearchConnection = "https://1c7fdb58c2:77a29dd0ee439c5ec3a9@serene-camphor-1pk1bptz.ap-southeast-2.bonsaisearch.net";
+        String opensearchConnection = "https://1c7<...>.bonsaisearch.net";
 
         RestHighLevelClient restHighLevelClient;
         URI uri = URI.create(opensearchConnection);
@@ -101,7 +101,7 @@ public class WikimediaConsumerApp {
         String group = args[1];
         String identifier = args[2];
 
-//        String servers = "172.25.5.7:9092";
+//        String servers = "<IP_KAFKA>:<PORT_KAFKA>";
 //        String group = "consumer-openSearch-group";
 //        String identifier = "1";
 

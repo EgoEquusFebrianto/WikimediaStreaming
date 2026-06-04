@@ -14,8 +14,7 @@ Real-Time Data Pipeline menggunakan Apache Kafka dan OpenSearch untuk mengonsums
     - Kafka Producer
     - Kafka Consumer
     - OpenSearch Integration
-- End-to-End Pipeline Validation
-- Hasil Pengujian
+- Kesimpulan
 - Cara Menjalankan
 - Pengembangan Selanjutnya
 
@@ -289,9 +288,22 @@ Data yang telah diindeks dapat dicari kembali menggunakan OpenSearch Query API s
 
 ---
 
-# Hasil Pengujian
+# Kesimpulan
 
-![Performances Pipeline](assets/end-to-end-test.png)
+Proyek Wikimedia Streaming berhasil mengimplementasikan pipeline data streaming secara end-to-end menggunakan Apache Kafka dan OpenSearch.
+
+Data perubahan artikel yang dipublikasikan oleh Wikimedia Event Stream berhasil dikonsumsi secara real-time menggunakan Kafka Producer, didistribusikan melalui Kafka Topic, kemudian diproses oleh Kafka Consumer dan diindeks ke OpenSearch.
+
+Hasil implementasi menunjukkan bahwa event perubahan Wikimedia dapat disimpan dan dicari kembali menggunakan OpenSearch Query API, sehingga memungkinkan proses observasi dan analisis aktivitas Wikimedia secara near real-time.
+
+Melalui proyek ini, beberapa konsep penting dalam pengembangan data pipeline berhasil diterapkan, antara lain:
+- Real-time data ingestion menggunakan Server-Sent Events (SSE).
+- Message streaming menggunakan Apache Kafka.
+- Event processing menggunakan Kafka Consumer.
+- Bulk indexing ke OpenSearch.
+- Near real-time search dan retrieval menggunakan OpenSearch.
+
+Proyek ini dapat dikembangkan lebih lanjut dengan menambahkan fitur monitoring, dashboard visualisasi, schema validation, serta deployment menggunakan container dan orchestration platform seperti Docker dan Kubernetes.
 
 
 ---
