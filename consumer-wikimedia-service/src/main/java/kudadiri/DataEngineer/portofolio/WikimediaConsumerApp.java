@@ -38,7 +38,7 @@ public class WikimediaConsumerApp {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private static RestHighLevelClient createOpenSearchClient() {
-        String opensearchConnection = "https://1c7<...>.bonsaisearch.net";
+        String opensearchConnection = "https://1c7<...>.ap-southeast-2.bonsaisearch.net";
 
         RestHighLevelClient restHighLevelClient;
         URI uri = URI.create(opensearchConnection);
@@ -92,16 +92,18 @@ public class WikimediaConsumerApp {
 
     public static void main(String[] args) {
         if (args.length < 3) {
-            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <consumer-group-id> <consumer-id>");
+            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <topic-name> <consumer-group-id> <consumer-id>");
         } else {
             System.out.println("Consumer Started..");
         }
 
         String servers = args[0];
-        String group = args[1];
-        String identifier = args[2];
+        String topic = args[1];
+        String group = args[2];
+        String identifier = args[3];
 
 //        String servers = "<IP_KAFKA>:<PORT_KAFKA>";
+//        String topic = "wikimedia.recentChange";
 //        String group = "consumer-openSearch-group";
 //        String identifier = "1";
 
@@ -141,7 +143,7 @@ public class WikimediaConsumerApp {
                 sysLog.info("The Wikimedia Index already exists.");
             }
 
-            consumer.subscribe(Collections.singletonList("wikimedia.recentChange"));
+            consumer.subscribe(Collections.singletonList(topic));
 
             while (true) {
                 // [METRICS 3] Mulai hitung total waktu satu siklus loop
