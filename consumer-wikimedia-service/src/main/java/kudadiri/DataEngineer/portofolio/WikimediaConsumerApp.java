@@ -38,7 +38,7 @@ public class WikimediaConsumerApp {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private static RestHighLevelClient createOpenSearchClient() {
-        String opensearchConnection = "https://1c7<...>.ap-southeast-2.bonsaisearch.net";
+        String opensearchConnection = "https://1c7fdb58c2:77a29dd0ee439c5ec3a9@serene-camphor-1pk1bptz.ap-southeast-2.bonsaisearch.net";
 
         RestHighLevelClient restHighLevelClient;
         URI uri = URI.create(opensearchConnection);
@@ -91,21 +91,21 @@ public class WikimediaConsumerApp {
     }
 
     public static void main(String[] args) {
-        if (args.length < 3) {
-            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <topic-name> <consumer-group-id> <consumer-id>");
-        } else {
-            System.out.println("Consumer Started..");
-        }
+//        if (args.length < 3) {
+//            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <topic-name> <consumer-group-id> <consumer-id>");
+//        } else {
+//            System.out.println("Consumer Started..");
+//        }
+//
+//        String servers = args[0];
+//        String topic = args[1];
+//        String group = args[2];
+//        String identifier = args[3];
 
-        String servers = args[0];
-        String topic = args[1];
-        String group = args[2];
-        String identifier = args[3];
-
-//        String servers = "<IP_KAFKA>:<PORT_KAFKA>";
-//        String topic = "wikimedia.recentChange";
-//        String group = "consumer-openSearch-group";
-//        String identifier = "1";
+        String servers = "<IP_KAFKA>:<PORT_KAFKA>";
+        String topic = "wikimedia.recentChange";
+        String group = "consumer-openSearch-group";
+        String identifier = "1";
 
         final Logger sysLog = LoggerFactory.getLogger(WikimediaConsumerApp.class.getSimpleName());
         final Logger metricsLog = LoggerFactory.getLogger("metricsLogs");

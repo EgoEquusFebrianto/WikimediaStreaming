@@ -17,19 +17,19 @@ public class WikimediaProducerApp {
     private static final Logger metricLogs = LoggerFactory.getLogger("metricsLogger");
 
     public static void main(String[] args) throws InterruptedException {
-        if (args.length < 3) {
-            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <topic> <wikimedia-stream-url>");
-        } else {
-            System.out.println("Consumer Started..");
-        }
+//        if (args.length < 3) {
+//            System.out.println("[IMPORTANT] need parameter <bootstrap-server> <topic> <wikimedia-stream-url>");
+//        } else {
+//            System.out.println("Consumer Started..");
+//        }
+//
+//        String servers = args[0];
+//        String topic = args[1];
+//        String streamUrl = args[2];
 
-        String servers = args[0];
-        String topic = args[1];
-        String streamUrl = args[2];
-
-//        String servers = "<IP_KAFKA>:<Port_KAFKA>";
-//        String topic = "wikimedia.recentChange";
-//        String streamUrl = "https://stream.wikimedia.org/v2/stream/recentchange";
+        String servers = "172.25.5.7:9092";
+        String topic = "wikimedia.recentChange";
+        String streamUrl = "https://stream.wikimedia.org/v2/stream/recentchange";
 
         Properties configs = new Properties();
         configs.put("bootstrap.servers", servers);
